@@ -1,0 +1,1644 @@
+An Nguyen
+CS 4430
+Assignment 2
+
+
+
+
+
+
+
+
+
+1. Find the model number, speed, and hard-disk size for all PC ’s whose price is under $1000.
+
+mysql> SELECT model,speed,hdisk FROM pc WHERE price<1000;
+
+
++-------+-------+-------+
+| model | speed | hdisk |
++-------+-------+-------+
+| 1002  |  2.10 |   250 |
+| 1003  |  1.42 |    80 |
+| 1004  |  2.80 |   250 |
+| 1005  |  3.20 |   250 |
+| 1007  |  2.20 |   200 |
+| 1008  |  2.20 |   250 |
+| 1009  |  2.00 |   250 |
+| 1010  |  2.80 |   300 |
+| 1011  |  1.86 |   160 |
+| 1012  |  2.80 |   160 |
+| 1013  |  3.06 |    80 |
++-------+-------+-------+
+
+
+
+2. List the manufacturers of all printers.
+
+mysql> SELECT maker FROM product WHERE type='printer';
++-------+
+| maker |
++-------+
+| D     |
+| D     |
+| E     |
+| E     |
+| E     |
+| H     |
+| H     |
++-------+
+7 rows in set (0.00 sec)
+
+
+
+3. Find the model number, memory size, and screen size for laptops costing more than $1500.
+
+mysql> SELECT model,ram,screen FROM laptop WHERE price>1500;
++-------+------+--------+
+| model | ram  | screen |
++-------+------+--------+
+| 2001  | 2048 |  20.10 |
+| 2005  | 1024 |  17.00 |
+| 2006  | 2048 |  15.40 |
+| 2010  | 2048 |  15.40 |
++-------+------+--------+
+
+
+
+4.  List all color printers.
+
+mysql> SELECT * FROM printer WHERE color=1;
++-------+-------+---------+--------+
+| model | color | type    | price  |
++-------+-------+---------+--------+
+| 3001  |     1 | ink-jet |  99.00 |
+| 3003  |     1 | laser   | 899.00 |
+| 3004  |     1 | ink-jet | 120.00 |
+| 3006  |     1 | ink-jet | 100.00 |
+| 3007  |     1 | laser   | 200.00 |
++-------+-------+---------+--------+
+
+
+
+
+5. Find the model number and hard-disk size for those PC ’s that have a speed of 3.2 and a price
+less than $2000.
+
+mysql> SELECT model,hdisk FROM pc WHERE speed =3.2 AND price<2000;
++-------+-------+
+| model | hdisk |
++-------+-------+
+| 1005  |   250 |
+| 1006  |   320 |
++-------+-------+
+
+
+
+
+
+6. Give the manufacturer and speed of laptops with a hard disk of at least 30.
+
+mysql> SELECT maker,speed FROM product,laptop WHERE product.model=laptop.model AND hdisk>=30; 
++-------+-------+
+| maker | speed |
++-------+-------+
+| A     |  2.00 |
+| A     |  2.16 |
+| A     |  2.00 |
+| B     |  1.83 |
+| E     |  2.00 |
+| E     |  1.73 |
+| E     |  1.80 |
+| F     |  1.60 |
+| F     |  1.60 |
+| G     |  2.00 |
++-------+-------+
+
+
+7. Find the model number and price of all products (of any type) made by manufacture B.
+
+
+SELECT pc.model,pc.price
+FROM product, pc
+WHERE product.maker='B' AND product.model = pc.model
+UNION
+SELECT laptop.model, laptop.price
+FROM product, laptop
+WHERE product.maker ='B' AND product.model = laptop.model
+UNION
+SELECT printer.model, printer.price
+FROM product, printer
+WHERE product.maker='B' AND product.model = printer.model;
+
++-------+---------+
+| model | price   |
++-------+---------+
+| 1004  |  649.00 |
+| 1005  |  630.00 |
+| 1006  | 1049.00 |
+| 2007  | 1429.00 |
++-------+---------+
+
+
+
+8. Find those manufacturers that sell Laptops, but not PC’s.
+
+SELECT distinct p1.maker
+FROM laptop l NATURAL JOIN product p1
+WHERE p1.maker
+NOT IN
+(
+SELECT p2.maker
+FROM pc p NATURAL JOIN product p2); 
+
++-------+
+| maker |
++-------+
+| F     |
+| G     |
++-------+
+
+9. Find those hard disk sizes that occur in two or more PC's.
+
+SELECT hdisk
+FROM pc
+GROUP BY hdisk
+HAVING COUNT(model) >=2; 
+
++-------+
+| hdisk |
++-------+
+|    80 |
+|   160 |
+|   250 |
++-------+
+
+
+
+10. Find those pairs of PC models that have both the same speed and RAM. A pair should be listed only once; e.g., list (i,j) but not (j,i).
+
+SELECT p1.model, p2.model
+FROM pc p1, pc p2
+WHERE p1.model < p2.model AND p1.speed = p2.speed AND p1.ram = p2.ram; 
+
++-------+-------+
+| model | model |
++-------+-------+
+| 1004  | 1012  |
++-------+-------+
+
+
+11. Find those manufacturers of at least two different computers (PC’s
+or laptops) with speeds of at least 3.0.
+
+SELECT DISTINCT p.maker
+FROM product p, product p1
+WHERE p.maker = p1.maker
+and p.model in 
+(
+SELECT pc.model
+FROM pc
+WHERE pc.speed >3.0 
+UNION
+SELECT lp.model
+FROM laptop lp
+WHERE lp.speed>3.0);
+
++-------+
+| maker |
++-------+
+| B     |
+| E     |
++-------+
+
+
+
+12. Find the makers of PC’s with a speed of at least 3.0.
+
+SELECT DISTINCT maker
+FROM product 
+WHERE model in (SELECT model FROM pc WHERE speed>3.0);
+
++-------+
+| maker |
++-------+
+| B     |
+| E     |  
++-------+
+
+
+
+13.  Find the printers with the highest price.
+
+mysql> SELECT model 
+    -> FROM printer 
+    -> WHERE price >= ALL(SELECT price FROM printer);
+
+
++-------+
+| model |
++-------+
+| 3003  |
++-------+
+
+
+
+14. Find the laptops whose speed is slower than that of any PC.
+
+mysql> SELECT model
+    FROM laptop 
+    WHERE laptop.speed <(SELECT MIN(speed) FROM pc);
+
+Empty set
+
+
+15. Find the model number of the item (PC, laptop, or printer) with the highest price.
+
+select model from
+(
+select model,price from pc where price = (select max(price) from pc)
+union
+select model,price from laptop where price = (select max(price) from laptop)
+union
+select model,price from printer where price = (select max(price) from printer)
+) as ab
+where price = 
+(select max(price) from
+(
+select model,price from pc where price = (select max(price) from pc)
+union
+select model,price from laptop where price = (select max(price) from laptop)
+union
+select model,price from printer where price = (select max(price) from printer)
+) as abc) ;
+
++-------+
+| model |
++-------+
+| 2001  |
++-------+
+
+
+16. 
+
+
+18. Find the average speed of PC’s
+
+mysql> SELECT AVG(speed) FROM pc;
++------------+
+| AVG(speed) |
++------------+
+|   2.484615 |
++------------+
+
+
+
+19. Find the average speed of laptops costing over $1000. 
+
+SELECT AVG(speed) 
+FROM laptop 
+WHERE price > 1000; 
+
++------------+
+| AVG(speed) |
++------------+
+|   1.998333 |
++------------+
+
+
+20.  Find the average price of PC’s made by manufacturer “A”.
+
+SELECT AVG(price)
+FROM pc,product
+WHERE pc.model = product.model AND maker='A'; 
+
++-------------+
+| AVG(price)  |
++-------------+
+| 1195.666667 |
++-------------+
+
+
+21. Find the average price of PC's and laptops made by manufacturer 'D'.
+
+SELECT AVG(D.price) 
+FROM (
+SELECT p.price 
+FROM product r, pc p
+WHERE r.model = p.model AND r.maker = 'D'
+UNION ALL
+SELECT l.price
+FROM product r, laptop l
+WHERE r.model = l.model AND r.maker ='D') D; 
+
++--------------+
+| AVG(D.price) |
++--------------+
+|   730.000000 |
++--------------+
+
+22. Find, for each different speed, the average price of a PC.
+
+SELECT speed, avg(price)
+FROM pc
+GROUP BY speed; 
+
++-------+-------------+
+| speed | avg(price)  |
++-------+-------------+
+|  1.42 |  478.000000 |
+|  1.86 |  959.000000 |
+|  2.00 |  650.000000 |
+|  2.10 |  995.000000 |
+|  2.20 |  640.000000 |
+|  2.66 | 2114.000000 |
+|  2.80 |  689.333333 |
+|  3.06 |  529.000000 |
+|  3.20 |  839.500000 |
++-------+-------------+
+
+23. Find for each manufacturer, the average screen size of its laptops.
+
+SELECT maker, avg(screen)
+FROM product NATURAL JOIN laptop 
+GROUP BY maker; 
+
++-------+-------------+
+| maker | avg(screen) |
++-------+-------------+
+| A     |   15.233333 |
+| B     |   13.300000 |
+| E     |   17.500000 |
+| F     |   14.750000 |
+| G     |   15.400000 |
++-------+-------------+
+
+
+24. Find the manufactureres that make at least three different models of PC.
+
+SELECT maker
+FROM pc NATURAL JOIN product
+GROUP BY maker
+HAVING count(model) = 3; 
+
++-------+
+| maker |
++-------+
+| A     |
+| B     |
+| D     |
+| E     |
++-------+
+
+
+25. Find for each manufacturer who sell's PC's the maximum price of a PC
+
+SELECT maker, max(price)
+FROM product NATURAL JOIN pc
+GROUP BY maker; 
+
++-------+------------+
+| maker | max(price) |
++-------+------------+
+| A     |    2114.00 |
+| B     |    1049.00 |
+| C     |     510.00 |
+| D     |     770.00 |
+| E     |     959.00 |
++-------+------------+
+
+26. Find, for each speed of PC above 2.0, the average price.
+
+SELECT speed, avg(price)
+FROM pc
+WHERE speed >2.0
+GROUP BY speed; 
+
++-------+-------------+
+| speed | avg(price)  |
++-------+-------------+
+|  2.10 |  995.000000 |
+|  2.20 |  640.000000 |
+|  2.66 | 2114.000000 |
+|  2.80 |  689.333333 |
+|  3.06 |  529.000000 |
+|  3.20 |  839.500000 |
++-------+-------------+
+
+27. 
+
+SELECT avg(p.hdisk) 
+FROM product pr, pc p
+WHERE pr.model = p.model
+AND pr.maker IN (
+SELECT maker 
+FROM product
+WHERE type = 'printer'
+); 
+
++--------------+
+| avg(p.hdisk) |
++--------------+
+|     200.0000 |
++--------------+
+
+
+
+
+28. Find the class name and country for all classes with at least 10 guns.
+
+SELECT class, country,guns
+    FROM classes
+     WHERE guns >=10;
+
++-----------+---------+------+
+| class     | country | guns |
++-----------+---------+------+
+| Tennessee | USA     |   12 |
++-----------+---------+------+
+
+
+
+29. Find the names of all ships launched prior to 1918, but call the resulting column shipName.
+
+
+SELECT name AS shipName, launched
+FROM ships
+WHERE launched<1918;
+
++-----------------+----------+
+| shipName        | launched |
++-----------------+----------+
+| Haruna          |     1915 |
+| Hiei            |     1914 |
+| Kirishima       |     1915 |
+| Kongo           |     1913 |
+| Ramillies       |     1917 |
+| Renown          |     1916 |
+| Repulse         |     1916 |
+| Resolution      |     1916 |
+| Revenge         |     1916 |
+| Royal Oak       |     1916 |
+| Royal Sovereign |     1916 |
++-----------------+----------+
+
+
+
+
+
+
+
+
+
+30. Find the names of ships sunk in battle and the name of the battle in which they were sunk. 
+
+SELECT ship
+FROM outcomes
+WHERE outcomes.result = 'sunk';
+
++-------------+
+| ship        |
++-------------+
+| Arizona     |
+| Bismarck    |
+| Fuso        |
+| Hood        |
+| Kirishima   |
+| Scharnhorst |
+| Yamashiro   |
++-------------+
+
+
+
+31. Find all ship names that have the same name as their class.
+
+SELECT name 
+FROM ships
+WHERE name = class; 
+
++----------------+
+| name           |
++----------------+
+| Iowa           |
+| Kongo          |
+| North Carolina |
+| Renown         |
+| Revenge        |
+| Tennessee      |
+| Yamato         |
++----------------+
+
+
+32.  Find the names of all ships that begin with the letter “R”.
+
+SELECT name
+FROM ships
+WHERE name LIKE 'R%';
+
++-----------------+
+| name            |
++-----------------+
+| Ramillies       |
+| Renown          |
+| Repulse         |
+| Resolution      |
+| Revenge         |
+| Royal Oak       |
+| Royal Sovereign |
++-----------------+
+
+
+33. Find the names of all ships from the Outcomes table whose name consists of three or more
+words (e.g., King George V).
+
+SELECT ship
+FROM outcomes
+WHERE ship LIKE '% % %';
+
++-----------------+
+| ship            |
++-----------------+
+| Duke of York    |
+| King George V   |
+| Prince of Wales |
++-----------------+
+
+
+
+34. Find the ships heavier than 35,000 tons.
+
+SELECT DISTINCT ships.name, classes.displacement
+FROM classes, ships
+WHERE classes.displacement>35000 AND classes.class=ships.class;
+
+
++----------------+--------------+
+| name           | displacement |
++----------------+--------------+
+| Iowa           |        46000 |
+| Missouri       |        46000 |
+| New Jersey     |        46000 |
+| Wisconsin      |        46000 |
+| North Carolina |        37000 |
+| Washington     |        37000 |
+| Musashi        |        65000 |
+| Yamato         |        65000 |
++----------------+--------------+
+
+
+
+35. List the name, displacement, and number of guns of the ships engaged in the battle of
+Guadalcanal.
+
+SELECT class, guns, displacement 
+FROM classes 
+WHERE class = (
+SELECT class 
+FROM ships
+WHERE name 
+IN (
+SELECT ship 
+FROM outcomes 
+WHERE battle = 'Guadalcanal')); 
+
+
+36. Find those countries that have both battleships and battlecruisers.
+
+SELECT c1.country
+FROM classes c1, classes c2
+WHERE c1.country = c2.country AND c1.type='bb' AND c2.type ='bc'; 
+
++-------------+
+| country     |
++-------------+
+| Japan       |
+| Gt. Britain |
++-------------+
+
+
+37. 
+
+
+
+38. Find those battles with at least three ships of the same country.
+
+SELECT o.battle
+FROM outcomes o, ships s, classes c
+WHERE o.ship = s.name AND s.class = c.class
+GROUP BY c.country, o.battle
+HAVING COUNT(o.ship) >3; 
+
+Empty set.
+
+39. Find the countries whose ships had the largest number of guns.
+
+SELECT country
+FROM classes
+WHERE guns IN (
+SELECT MAX(guns)
+FROM classes); 
+
++---------+
+| country |
++---------+
+| USA     |
++---------+
+
+
+
+40. 
+
+SELECT DISTINCT c.class
+FROM classes c, ships s
+WHERE c.class = s.class
+AND s.name IN (
+SELECT ship
+FROM outcomes o
+WHERE o.result = 'sunk'); 
+
++-------+
+| class |
++-------+
+| Kongo |
++-------+
+
+
+41. Find the names of ships with a 16-inch bore.
+
+SELECT name
+FROM classes NATURAL JOIN ships
+WHERE bore=16; 
+
++----------------+
+| name           |
++----------------+
+| Iowa           |
+| Missouri       |
+| New Jersey     |
+| Wisconsin      |
+| North Carolina |
+| Washington     |
++----------------+
+
+
+42. Find the battles in which ships of the Kongo class participated.
+
+SELECT o.battle
+FROM outcomes o
+WHERE o.ship IN (
+SELECT name
+FROM ships s
+WHERE s.class = 'Kongo'); 
+
++-------------+
+| battle      |
++-------------+
+| Guadalcanal |
++-------------+
+
+
+43. Find the names of the ships whose number of guns was the largest for those ships of the same
+bore.
+
+SELECT s.name
+FROM ships s, classes c
+WHERE s.class = c.class
+AND guns IN(
+SELECT MAX(guns)
+FROM ships s1, classes c1
+WHERE s1.class = c1.class AND c1.bore = c.bore
+); 
+
++-----------------+
+| name            |
++-----------------+
+| Iowa            |
+| Missouri        |
+| New Jersey      |
+| Wisconsin       |
+| North Carolina  |
+| Washington      |
+| Ramillies       |
+| Resolution      |
+| Revenge         |
+| Royal Oak       |
+| Royal Sovereign |
+| California      |
+| Tennessee       |
+| Musashi         |
+| Yamato          |
++-----------------+
+
+
+44.Find the number of battleship classes. 
+
+SELECT COUNT(class)
+FROM classes
+WHERE type='bb';
+
++--------------+
+| COUNT(class) |
++--------------+
+|            6 |
++--------------+
+
+
+45. Find the average number of guns of battleship (type=’bb’) classes.
+
+SELECT AVG(guns)
+FROM classes
+WHERE type = 'bb'; 
+
++-----------+
+| AVG(guns) |
++-----------+
+|    9.1667 |
++-----------+
+
+
+46. Find the average number of guns of battleships (type='bb'). 
+
+SELECT AVG(guns)
+FROM ships,classes
+WHERE ships.class = classes.class AND type = 'bb'; 
+
++-----------+
+| AVG(guns) |
++-----------+
+|    9.0667 |
++-----------+
+
+
+47. Find for each class the year in which the first ship of that class was launched.
+
+SELECT class, min(launched)
+FROM ships
+GROUP BY class; 
+
++----------------+---------------+
+| class          | min(launched) |
++----------------+---------------+
+| Iowa           |          1943 |
+| Kongo          |          1913 |
+| North Carolina |          1941 |
+| Renown         |          1916 |
+| Revenge        |          1916 |
+| Tennessee      |          1920 |
+| Yamato         |          1941 |
++----------------+---------------+
+
+
+
+48. Find for each class the number of ships that class sunk in battle.
+
+SELECT class, COUNT(ship)
+FROM outcomes,ships
+WHERE outcomes.ship = ships.name AND result = 'sunk'
+GROUP BY class; 
+
++-------+-------------+
+| class | COUNT(ship) |
++-------+-------------+
+| Kongo |           1 |
++-------+-------------+
+
+
+49. Find for each class with at least three ships the number of ships of that class sunk in battle
+
+SELECT class, COUNT(ship)
+FROM outcomes, ships
+WHERE outcomes.ship = ships.name AND result='sunk'
+AND class in(
+SELECT class c
+FROM ship 
+WHERE (
+SELECT count(name) 
+FROM ship
+WHERE class = c)>=3
+GROUP BY class
+
+50. The weight (in pounds) of the shell fired from a naval gun is approximately one half the cube of the bore (in inches). Find the average weight of the shell for each country’s ships.
+
+SELECT country, avg(bore*bore*bore/2) 
+FROM classes,ships
+WHERE classes.class = ships.class
+GROUP BY country; 
+
++-------------+-----------------------+
+| country     | avg(bore*bore*bore/2) |
++-------------+-----------------------+
+| Gt. Britain |         1687.50000000 |
+| Japan       |         1886.66666667 |
+| USA         |         1879.00000000 |
++-------------+-----------------------+
+
+
+
+
+51. Find the pnames of parts for which there is some supplier.
+
+select distinct pname
+from parts, catalog
+where parts.pid = catalog.pid; 
+
++-----------------------------------+
+| pname                             |
++-----------------------------------+
+| Left Handed Bacon Stretcher Cover |
+| Acme Widget Washer                |
+| I Brake for Crop Circles Sticker  |
+| Anti-Gravity Turbine Generator    |
+| Fire Hydrant Cap                  |
+| 7 Segment Display                 |
++-----------------------------------+
+
+
+52. Find the snames of suppliers who supply every part.
+
+
+SELECT  S.sname
+  FROM  suppliers S, catalog C
+  WHERE NOT EXISTS (
+     SELECT  P.pid
+       FROM  parts P
+       WHERE NOT EXISTS (
+         SELECT  C1.sid
+           FROM  catalog C1
+           WHERE C1.sid = C.sid
+             AND C1.pid = P.pid
+         )
+     )
+
+Empty Set.
+
+
+53. 
+
+SELECT s.sname
+FROM suppliers s
+WHERE EXISTS (
+SELECT p.pid
+FROM parts p, catalog c
+WHERE p.color = 'red' AND c.sid<> s.sid); 
+
+
+Empty set.
+
+54. Find the pnames of parts supplied by Acme Widget Suppliers and no one else
+
+SELECT p.pname 
+FROM parts p, catalog c, suppliers s
+WHERE p.pid = c.pid AND c.sid = s.sid
+AND s.sname = 'Acme Widget Suppliers'
+AND NOT EXISTS (
+SELECT *
+FROM catalog c1, suppliers s1
+WHERE p.pid = c1.pid AND c1.sid = s1.sid AND s1.sname <> 'Acme Widget Suppliers'); 
+
++--------------------+
+| pname              |
++--------------------+
+| Acme Widget Washer |
++--------------------+
+
+
+
+55. Find the sids of suppliers who charge more for some part than the average cost of that part
+(averaged over all the suppliers who supply that part).
+
+SELECT DISTINCT c.sid AS 'Supplier ID'
+FROM catalog c
+WHERE c.cost > (
+SELECT avg (c1.cost)
+FROM catalog c1
+WHERE c1.pid = c.pid); 
+
++-------------+
+| Supplier ID |
++-------------+
+|           1 |
+|           2 |
+|           3 |
++-------------+
+
+
+56. For each part, find the sname of the supplier who charges the most for that part.
+
+SELECT p.pid AS 'Part ID', s.sname AS 'Supplier Who Charges Most'
+FROM parts p, suppliers s, catalog c
+WHERE c.pid = p.pid
+AND c.sid = s.sid
+AND c.cost = (
+SELECT MAX(c1.cost)
+FROM catalog c1
+WHERE c1.pid = p.pid); 
+
++---------+---------------------------+
+| Part ID | Supplier Who Charges Most |
++---------+---------------------------+
+|       4 | Acme Widget Suppliers     |
+|       1 | Big Red Tool and Die      |
+|       3 | Big Red Tool and Die      |
+|       8 | Perfunctory Parts         |
+|       9 | Perfunctory Parts         |
+|       5 | Alien Aircaft Inc.        |
+|       6 | Alien Aircaft Inc.        |
+|       7 | Alien Aircaft Inc.        |
++---------+---------------------------+
+
+
+
+57. Find the sids of suppliers who only supply red parts.
+
+SELECT DISTINCT c.sid 
+FROM catalog c
+WHERE NOT EXISTS (
+SELECT * 
+FROM parts p
+WHERE p.pid = c.pid AND p.color <> 'red'); 
+
++-----+
+| sid |
++-----+
+|   1 |
+|   2 |
+|   3 |
++-----+
+
+
+58. Find the sids of suppliers who supply a red part or a green part. 
+
+SELECT DISTINCT c.sid
+FROM catalog c, parts p
+WHERE c.pid = p.pid AND p.color ='red'
+UNION
+SELECT DISTINCT c1.sid
+FROM catalog c1, parts p1
+WHERE c1.pid = p1.pid AND p1.color ='green'; 
+
+
+SELECT DISTINCT c.sid
+FROM catalog c, parts p
+
+
++-----+
+| sid |
++-----+
+|   2 |
+|   1 |
+|   3 |
++-----+
+
+
+
+59. Find the sids of suppliers who supply a red and a green part. 
+
+SELECT DISTINCT c.sid
+FROM catalog c, parts p
+WHERE c.pid = p.color ='red' AND  c.sid IN (
+SELECT c1.sid
+FROM catalog c1, parts p1
+WHERE c1.pid = p1.pid AND p1.color = 'green'); 
+
++-----+
+| sid |
++-----+
+|   3 |
++-----+
+
+
+
+61. For every supplier that only supplies green parts, print the name of the supplier and the total number of parts that she supplies. 
+
+SELECT s.sname, COUNT(*) 
+FROM suppliers s, parts p, catalog c
+WHERE p.pid = c.pid AND c.sid = s.sid AND p.color ='green'
+GROUP BY s.sname, s.sid
+
++-------------------+----------+
+| sname             | COUNT(*) |
++-------------------+----------+
+| Perfunctory Parts |        1 |
++-------------------+----------+
+
+
+
+62. For every supplier that supplies a green part and a red part, print the name and
+price of the most expensive part that she supplies.
+
+SELECT s.sname, MAX(c.cost) 
+FROM suppliers s, parts p, catalog c
+WHERE p.pid = c.pid AND c.sid = s.sid AND p.color = 'green' AND p.color = 'red'
+GROUP BY s.sname, s.sid
+
+Empty set. 
+
+
+
+
+
+
+63. Print the names and ages of each employee who works both in the Hardware department and the Software department. 
+
+SELECT distinct ename, age, dname
+FROM emp, works, dept
+WHERE dept.dname='Hardware' OR dept.dname = 'Software';
+
+SELECT e.ename, e.age
+FROM emp e, works w1, works w2, dept d1, dept d2
+WHERE e.eid= w1.eid AND w1.did = d1.did AND d1.dname = 'Hardware' AND e.eid=w2.eid AND w2.did = d2.did AND d2.dname = 'Software';
+
++----------------+------+
+| ename          | age  |
++----------------+------+
+| Mary Johnson   |   44 |
+| Stanley Browne |   23 |
++----------------+------+
+
+64. For each department with more than 20 full-time-equivalent employees (i.e., where
+the part-time and full-time employees add up to at least that many full-time employees), print the
+did together with the number of employees that work in that department.
+
+
+SELECT w.did, COUNT(w.eid)
+FROM works w
+GROUP BY w.did
+HAVING 2000<(
+SELECT SUM(w1.pct_time)
+FROM works w1
+WHERE w1.did = w.did);
+
++-----+--------------+
+| did | COUNT(w.eid) |
++-----+--------------+
+|   2 |           26 |
+|   6 |           22 |
++-----+--------------+
+
+
+65. Print the name of each employee whose salary exceeds the budget of all of the departments
+that he or she works in.
+
+SELECT e.ename, e.salary
+FROM emp e
+WHERE e.salary > all(
+SELECT d.budget
+FROM dept d, works w
+WHERE e.eid = w.eid AND d.did = w.did); 
+
++-------------+
+| ename       |
++-------------+
+| Linda Davis |
++-------------+
+
+
+66. 
+
+SELECT distinct d.managerid
+FROM dept d
+WHERE 1000000< ALL(
+SELECT MAX(d2.budget)
+FROM dept d2
+WHERE d2.managerid=d.managerid);
+
++-----------+
+| managerid |
++-----------+
+| 141582651 |
+| 287321212 |
+| 578875478 |
++-----------+
+
+
+67. Find the enames of managers who manage the departments with the largest budgets.
+
+SELECT e.ename
+FROM emp e
+WHERE e.eid IN(
+SELECT d.managerid
+FROM dept d
+WHERE d.budget = (
+SELECT MAX(d2.budget)
+FROM dept d2));
+
++----------------+
+| ename          |
++----------------+
+| Michael Miller |
+| Edward Baker   |
++----------------+
+
+
+68. If a manager manages more than one department, he or she controls the sum of all the budgets
+for those departments. Find the managerids of managers who control more than $5 million.
+
+SELECT d.managerid
+FROM dept d
+WHERE 5000000 < (
+SELECT SUM(d2.budget)
+FROM dept d2
+WHERE d2.managerid = d.managerid)
+
++-----------+
+| managerid |
++-----------+
+| 287321212 |
+| 578875478 |
++-----------+
+
+
+69. Find the managerids of managers who control the largest amounts.
+
+SELECT DISTINCT tempD.managerid
+FROM (
+SELECT DISTINCT d.managerid, SUM(d.budget) AS tempBudget
+FROM dept d
+GROUP BY d.managerid) AS tempD
+WHERE tempD.tempBudget = (
+SELECT MAX (tempD.tempBudget)
+FROM tempD)
+
+
+
+70.
+
+SELECT e.ename
+FROM emp e, dept d
+WHERE e.eid = d.managerid AND (d.budget >1000000) AND (d.budget <5000000)
+GROUP BY e.eid, e.ename; 
+
++--------------+
+| ename        |
++--------------+
+| Mary Johnson |
++--------------+
+
+
+71. Find the names of all junior students (level = JR) who are enrolled in a class taught by Ivana
+Teach.
+
+SELECT DISTINCT s.sname
+FROM student s, class c, enrolled e, faculty f
+WHERE s.snum = e.snum AND e.cname = c.cname AND c.fid = f.fid AND f.fname='Ivana Teach' AND s.level ='JR';
+
++--------------------+
+| sname              |
++--------------------+
+| Christopher Garcia |
+| Paul Hall          |
++--------------------+
+
+72. Find the names of students not enrolled in any class.
+
+SELECT DISTINCT s.sname
+FROM student s
+WHERE NOT EXISTS(
+SELECT e.snum
+FROM enrolled e); 
+
+Empty set. 
+
+73.
+
+
+
+74. 
+SELECT DISTINCT f.fname 
+FROM faculty f
+WHERE NOT EXISTS (
+SELECT * 
+FROM class c)
+
+
+75. Print the level and the average age of students for that level, for each level.
+
+SELECT s.level, AVG(s.age)
+FROM student s
+GROUP BY s.level; 
+
++-------+------------+
+| level | AVG(s.age) |
++-------+------------+
+| FR    |    17.6667 |
+| JR    |    19.5000 |
+| SO    |    18.4000 |
+| SR    |    20.7143 |
++-------+------------+
+
+
+76. Print the level and the average age of students for that level, for all levels except JR.
+
+SELECT s.level, AVG(s.age)
+FROM student s
+WHERE s.level <> 'JR'
+GROUP BY s.level; 
+
++-------+------------+
+| level | AVG(s.age) |
++-------+------------+
+| FR    |    17.6667 |
+| SO    |    18.4000 |
+| SR    |    20.7143 |
++-------+------------+
+
+
+77. For each faculty member that has taught classes only in room R128, print the faculty member's
+name and the total number of classes she or he has taught.
+
+SELECT f.fname, COUNT(*) 
+FROM faculty f, class c
+WHERE f.fid = c.fid AND c.room ='R128'
+GROUP BY f.fid, f.fname
+
++------------------+----------+
+| fname            | COUNT(*) |
++------------------+----------+
+| Elizabeth Taylor |        1 |
+| Barbara Wilson   |        1 |
+| Robert Brown     |        1 |
+| Richard Jackson  |        1 |
+| Linda Davis      |        1 |
++------------------+----------+
+
+
+
+78. Find the names of students enrolled in the maximum number of classes.
+
+
+SELECT DISTINCT s.sname
+FROM student s
+WHERE s.snum 
+IN (
+SELECT e.snum
+FROM enrol
+
+79. 
+
+
+
+
+
+
+
+
+80.
+SELECT MAX(s.age)
+FROM student s
+WHERE (s.major = 'History')
+OR s.snum 
+IN (
+SELECT e.snum
+FROM class c, enrolled e, faculty f
+WHERE e.cname = c.cname AND c.fid = f.fid AND f.fname = 'Ivana Teach'); 
+
+
++------------+
+| MAX(s.age) |
++------------+
+|         20 |
++------------+
+
+
+
+81. 
+
+
+
+83. Find the names of aircraft such that all pilots certified to operate them earn more than $80,000.
+
+
+
+SELECT DISTINCT a.aname
+FROM aircraft a
+WHERE a.aid EXISTS(
+SELECT c.aid
+FROM certified c, employee e
+WHERE c.eid = e.eid AND
+NOT EXISTS (
+SELECT * 
+FROM employees e1
+WHERE e1.eid = e.eid AND e1.salary <80000));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+84. For each pilot who is certified for more than three aircraft, find the eid and the maximum
+cruising range of the aircraft for which she or he is certified.
+
+
+SELECT c.eid, MAX(a.cruisingrange)
+FROM certified c, aircraft a
+WHERE c.aid = a.aid
+GROUP BY c.eid
+HAVING COUNT(*) >3;
+
++-----------+----------------------+
+| eid       | MAX(a.cruisingrange) |
++-----------+----------------------+
+| 142519864 |                 8430 |
+| 269734834 |                 8430 |
+| 567354612 |                 8430 |
++-----------+----------------------+
+
+
+
+
+
+
+
+
+
+
+
+85. Find the names of pilots whose salary is less than the price of the cheapest route from Los
+Angeles to Honolulu.
+
+SELECT DISTINCT e.ename
+FROM employees e
+WHERE e.salary < (
+SELECT MIN(f.price)
+FROM flights f
+WHERE f.origin = 'LA' AND f.destination = 'Honolulu'); 
+
+Empty set. 
+
+
+
+86. For all aircraft with cruising range over 1000 miles, find the name of the aircraft and the average
+
+
+salary of all pilots certified for this aircraft.
+87. Find the aids of all aircraft that can be used on routes from Los Angeles to Chicago.
+
+SELECT a.aid
+FROM aircraft a
+WHERE a.cruisingrange > (
+SELECT MIN(f.distance)
+FROM flights f
+WHERE f.origin ='L.A.' AND f.destination = 'Chicago');
+
+Empty set.
+
+
+
+
+
+88. Identify the routes that can be piloted by every pilot who makes more than $100,000.
+
+
+SELECT DISTINCT f.origin, f.destination
+FROM flights f
+WHERE NOT EXISTS (
+SELECT *
+FROM employees e
+WHERE e.salary >1000000
+AND
+NOT EXISTS (
+SELECT *
+FROM aircraft a, certified c
+WHERE a.cruisingrange > f.distance AND e.eid = c.eid AND a.aid = c.aid)); 
+
+
++-------------+-----------------+
+| origin      | destination     |
++-------------+-----------------+
+| Los Angeles | Tokyo           |
+| Los Angeles | Sydney          |
+| Los Angeles | Chicago         |
+| Los Angeles | Honolulu        |
+| Chicago     | New York        |
+| Chicago     | Los Angeles     |
+| Los Angeles | Washington D.C. |
+| Pittsburgh  | New York        |
+| Minneapolis | New York        |
+| Los Angeles | Dallas          |
+| Los Angeles | Boston          |
+| Detroit     | New York        |
+| Madison     | New York        |
+| Madison     | Pittsburgh      |
+| Madison     | Chicago         |
+| Madison     | Minneapolis     |
+| Madison     | Detroit         |
++-------------+-----------------+
+
+
+
+
+
+
+
+
+
+
+89. Print the names of pilots who can operate aircrafts with cruising range greater than 3000 miles
+but are not certified on any Boeing aircraft.
+
+
+SELECT DISTINCT e.ename 
+FROM employees e
+WHERE e.eid IN ((
+SELECT c.eid
+FROM certified c
+WHERE EXISTS(
+SELECT a.aid
+FROM aircraft a
+WHERE a.aid = c.aid
+AND a.cruisingrange >3000)
+AND
+NOT EXISTS (
+SELECT a1.aid
+FROM aircraft a1
+WHERE a1.aid = c.aid
+AND a1.name LIKE 'Boeing%')); 
+
+
+
+
+
+
+
+
+90. Compute the difference between the average salary of pilots and the average salary of all
+employees (including pilots).
+
+
+SELECT t.avg - t1.avg AS 'Difference in average salary between pilots and all employees'
+FROM (
+SELECT AVG(e.salary) AS avg
+FROM employees e
+WHERE e.eid IN (
+SELECT DISTINCT c.eid
+FROM certified c)) as t, (
+SELECT AVG (e1.salary) AS avg
+FROM employees e1) as t1; 
+
+
++---------------------------------------------------------------+
+| Difference in average salary between pilots and all employees |
++---------------------------------------------------------------+
+|                                                  11449.645161 |
++---------------------------------------------------------------+
+
+
+
+
+
+
+
+
+
+
+
+
+91. Print the name and salary of every non-pilot whose salary is more than the average salary for
+pilots.
+
+
+SELECT e.ename, e.salary
+FROM employees e
+WHERE e.eid NOT IN (
+SELECT DISTINCT c.eid
+FROM certified c)
+AND e.salary > (
+SELECT AVG (e1.salary)
+FROM employees e1
+WHERE e1.eid IN (
+SELECT DISTINCT c1.eid
+FROM certified c1)); 
+
++----------------+-----------+
+| ename          | salary    |
++----------------+-----------+
+| David Anderson | 743001.00 |
++----------------+-----------+
+
+
+
+
+
+
+
+
+92. Print the names of employees who are certified only on aircrafts with cruising range longer than
+1000 miles.
+
+SELECT e.ename
+FROM employees e, certified c, aircraft a
+WHERE c.aid = a.aid AND e.eid = c.eid AND a.cruisingrange> 1000
+GROUP BY e.eid, e.ename 
+
++------------------+
+| ename            |
++------------------+
+| John Williams    |
+| Elizabeth Taylor |
+| Mary Johnson     |
+| Betty Adams      |
+| William Moore    |
+| James Smith      |
+| George Wright    |
+| Michael Miller   |
+| Joseph Thompson  |
+| Angela Martinez  |
+| Robert Brown     |
+| Lawrence Sperry  |
+| Karen Scott      |
+| Larry West       |
+| Mark Young       |
+| Lisa Walker      |
+| Eric Cooper      |
+| William Jones    |
++------------------+
+
+
+
+
+
+93. Print the names of employees who are certified only on aircrafts with cruising range longer than
+1000 miles, but on at least two such aircrafts.
+
+
+SELECT e.ename
+FROM employees e, certified c, aircraft a
+WHERE c.aid = a.aid AND e.eid = c.eid AND a.cruisingrange >1000
+GROUP BY e.eid, e.ename 
+HAVING COUNT(*) >1 
++-----------------+
+| ename           |
++-----------------+
+| John Williams   |
+| Mary Johnson    |
+| Betty Adams     |
+| James Smith     |
+| George Wright   |
+| Michael Miller  |
+| Joseph Thompson |
+| Angela Martinez |
+| Lawrence Sperry |
+| Karen Scott     |
+| Larry West      |
+| Mark Young      |
+| Lisa Walker     |
+| Eric Cooper     |
+| William Jones   |
++-----------------+
+
+
+
+
+
+
+
+
+94. Print the names of employees who are certified only on aircrafts with cruising range longer than
+1000 miles and who are certified on some Boeing aircraft. 
+
+
+SELECT e.ename
+FROM employees e, certified c, aircraft a
+WHERE c.aid = a.aid AND e.eid = c.eid
+GROUP BY e.eid, e.ename
+HAVING EVERY(a.cruisingrange >1000) AND (a.aname ='Boeing');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

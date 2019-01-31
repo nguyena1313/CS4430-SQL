@@ -1,0 +1,330 @@
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.sql.*;
+import java.util.Random;
+import java.util.Scanner;
+
+import javax.swing.JOptionPane;
+class MysqlCon{  
+	
+	
+	
+public static void main(String args[]){  
+try{  
+Class.forName("com.mysql.cj.jdbc.Driver");  
+
+
+//get connection
+Connection con=DriverManager.getConnection(  
+"jdbc:mysql://localhost/northwind?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC", "root","Nashty1313!");  
+
+
+String query = "Select * from categories";
+String q = "select * from customers";
+Scanner k = new Scanner(System.in);
+Scanner s = new Scanner(System.in); 
+// create the java statement
+
+
+Statement st = con.createStatement();
+Statement st1 = con.createStatement();
+Statement st2 = con.createStatement();
+Statement st3 = con.createStatement();
+
+//ResultSet rs = st.executeQuery(query);
+ResultSet rs1 = st.executeQuery(q);
+
+
+
+
+//Menu Interface
+System.out.println("1. add a customer");
+System.out.println("2. add an order");
+System.out.println("3. remove an order");
+System.out.println("4. ship an order");
+System.out.println("5. print pending order");
+System.out.println("6 restock parts");
+System.out.println("7. Exit");
+System.out.println("Select Option [1, 2, 3, 4, 5, 6, 7] :>");
+
+
+//get option
+int option = k.nextInt();
+
+ 
+
+// switch statement with int data type 
+switch (option) { 
+case 1: 
+	
+	
+	System.out.println("Enter in customer's ID ");
+	String customerID = s.nextLine();
+	System.out.println(customerID);
+	
+	System.out.println("Enter in company's name.");
+	String companyName = s.nextLine();
+	System.out.println(companyName);
+	
+	System.out.println("Enter in contact name.");
+	String contactName = s.nextLine();
+	System.out.println(contactName);
+	
+	System.out.println("Enter in contact's title.");
+	String contactTitle = s.nextLine();
+	System.out.println(contactTitle);
+	
+	System.out.println("Enter in address.");
+	String address = s.nextLine();
+	System.out.println(address);
+	
+	System.out.println("Enter in city.");
+	String city = s.nextLine();
+	System.out.println(city);
+	
+	System.out.println("Enter in region");
+	String region = s.nextLine();
+	System.out.println(region);
+	
+	System.out.println("Enter in postal code");
+	String postalCode = s.nextLine();
+	System.out.println(postalCode);
+	
+	
+	System.out.println("Enter in country.");
+	String country = s.nextLine();
+	System.out.println(country);
+	
+	System.out.println("Enter in phone.");
+	String phone = s.nextLine();
+	System.out.println(phone);
+	
+	System.out.println("Enter in fax. (Must be numbers)");
+	String fax = s.nextLine();
+	System.out.println(fax);
+	
+
+	// insert statement
+	String customerInsert = String.format("INSERT INTO customers "
+			+ "(CustomerID, CompanyName, ContactName, ContactTitle, Address, City, Region, PostalCode, Country, Phone, Fax) VALUES "
+			+ " ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %s)",customerID, companyName, contactName, contactTitle, address, city, region, postalCode, country, phone, fax );
+
+	
+	//execute statement
+	st.executeUpdate(customerInsert);
+	
+	System.out.println("Customer added");
+	
+
+	
+	
+	
+    break; 
+case 2: 
+	
+	//get productID
+	System.out.println("Enter in product ID to order. (Must be number)");
+	int pID1 = s.nextInt();
+	
+	
+	String query1 = String.format("SELECT Discontinued FROM products WHERE ProductID = %s;", pID1);
+	String dis ="";
+	String yes = "y";
+	ResultSet rs2 = st.executeQuery(query1);
+	
+	//get query for discontinue
+	while(rs2.next()) {
+		dis= rs2.getString("Discontinued");
+	}
+	
+	//see if product is discontinued
+	if(dis.equals(yes)) {
+		
+		System.out.println("Product is discontinued");
+		System.out.println("Exiting menu");
+		break;
+	}
+	
+	 System.out.println("How many products are you ordering");
+	 int unit = s.nextInt();
+	 
+	 System.out.println("Enter in customer ID");
+	 String cID1 = s.nextLine();
+	 
+	 
+	 //get queries to create ID's
+	 String maxQuery = "SELECT MAX(OrderID) FROM orders;";
+	 String maxQuery2 = "SELECT MAX(ID) FROM order_details;";
+	 String priceQuery = String.format("SELECT UnitPrice FROM products WHERE ProductID = %s", pID1) ;
+	 ResultSet rs3 = st1.executeQuery(maxQuery);
+	 ResultSet rs4 = st2.executeQuery(maxQuery2);
+	 ResultSet rs5 = st3.executeQuery(priceQuery);
+	int id = 0;
+	 int id2 =0;
+	 int price =0;
+	 
+	 Random rand = new Random();
+	 int shipVia = rand.nextInt(2)+1;
+	 String addOrder = String.format("UPDATE products SET UnitsOnOrder = UnitsOnOrder + %s WHERE ProductID = %s;", unit, pID1);
+	 st.executeUpdate(addOrder);
+	 
+	 
+	 while(rs3.next()) {
+		 id  = rs3.getInt("MAX(OrderID)");
+		 
+	 }
+	 
+	 
+    
+	 while(rs4.next()) {
+		 id2 = rs4.getInt("MAX(ID)");
+		
+	 }
+	 
+	 while(rs5.next()) {
+		 price = rs5.getInt("UnitPrice");
+		
+	 }
+	
+	 //new Order ID
+	 System.out.println(id);
+     int newID= id+1;
+     
+     //new ID
+     int newID2 = id2+1;
+     
+     //random employeeID
+     int empID = rand.nextInt(10);
+     
+
+ 	
+ 	String foreign = "SET foreign_key_checks = 0;";
+ 	
+ 	
+	
+	
+ 	String orderDetailsInsert = String.format("INSERT INTO order_details (ID, OrderID, ProductID, UnitPrice, Quantity) VALUES(%s, %s, %s, %s, %s);", newID2, newID, pID1, price, unit);
+ 	String orderInsert = String.format("INSERT INTO orders (OrderID, CustomerID, EmployeeID, OrderDate, ShipVia) VALUES (%s, '%s', %s, NOW(), %s);", newID, cID1, empID, shipVia);
+	
+ 	st.execute(foreign);
+	st.execute(orderDetailsInsert);
+ 	st.execute(orderInsert);
+ 
+ 	
+ 	
+ 	System.out.println("Order added");
+ 	
+	
+	
+	
+    break; 
+case 3: 
+try {
+		
+		System.out.println("Enter order ID to remove.");
+		
+		int orderID = s.nextInt();
+		String deleteOrderDetails = String.format("DELETE FROM order_details WHERE orderID = %s;", orderID);
+		String deleteOrder = String.format("DELETE FROM orders WHERE orderID = %s;", orderID);
+		System.out.println(deleteOrderDetails);
+		System.out.println(deleteOrder);
+		st.executeUpdate(deleteOrderDetails);
+		st.executeUpdate(deleteOrder);
+		
+		
+		System.out.println("Done");
+		
+		
+	} catch (Exception e) {
+		
+		System.out.println(e);
+	}
+    break; 
+case 4: 
+	try {
+		
+        System.out.print("Enter Order Number to ship: ");
+        int orderID = s.nextInt();
+        String shipOrder = String.format("UPDATE orders SET ShippedDate=NOW() WHERE orderID=%s;", orderID);
+        System.out.println(shipOrder);
+        st.executeUpdate(shipOrder);
+        System.out.print("Order Shipped\n\n");
+    } catch (Exception e) {
+        System.out.print("Order number does not match records\n\n");
+        return;
+    }
+    break; 
+case 5: 
+	
+	//PrintWriter pw = new PrintWriter(new FileWriter("out.txt"));
+	String pendingQuery = "SELECT o.CustomerID, c.CompanyName, c.Address, c.City, c.PostalCode, o.OrderID\n" + 
+			"FROM orders o, customers c\n" + 
+			"WHERE o.ShippedDate IS NULL;";
+	
+	System.out.println("Pending Orders: ");
+	
+	ResultSet pending = st.executeQuery(pendingQuery);
+	String titles = " CustomerID |                    CompanyName                   | OrderID | ";
+	System.out.println(titles);
+	//pw.write(titles);
+	while(pending.next()) {
+		
+		String cID = pending.getString("CustomerID");
+		String compName = pending.getString("CompanyName");
+		int oID = pending.getInt("OrderID");
+		
+		String output = "    " +cID + "    "+"         " +compName +"         "+oID+"       ";
+		System.out.println(output);
+		//pw.write(output);
+		
+		
+	}
+	PrintStream out = new PrintStream(new FileOutputStream("output.txt"));
+	System.setOut(out);
+    break; 
+case 6: 
+	
+	try {
+
+	
+    System.out.print("Enter ProductID to restock: ");
+    int pnum = s.nextInt();
+
+    System.out.println("Enter in Units In Stock now");
+	int units = s.nextInt();
+	System.out.println(units);
+	
+	
+	String stockUpdate = String.format("UPDATE products SET UnitsInStock = %s WHERE ProductID = %s;", units,pnum);
+	
+	System.out.println(stockUpdate);
+	
+	st.executeUpdate(stockUpdate);
+   // System.out.print("Units in stock updated");
+    
+    
+
+    
+	}
+	catch (SQLException e) {
+		System.out.println("Not a valid part number");
+	}
+    break; 
+
+case 7: 
+	break;
+default: 
+    System.out.println("Invalid input");
+    break; 
+} 
+System.out.println("Done"); 
+} 
+
+
+
+
+catch(Exception e){ System.out.println(e);}  
+}  
+}  

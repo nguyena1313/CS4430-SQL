@@ -1,0 +1,564 @@
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.math.BigInteger;
+import java.sql.*;
+import java.util.Random;
+import java.util.Scanner;
+
+import javax.swing.JOptionPane;
+
+
+
+class main{  
+
+public static void main(String args[]){  
+	try{  
+		Class.forName("com.mysql.cj.jdbc.Driver");  
+
+		
+		//get connection
+		Connection con=DriverManager.getConnection(  
+		"jdbc:mysql://localhost/BankData?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC", "root","Nashty1313!");  
+		Scanner k = new Scanner(System.in);
+		String query = "Select * from Accounts";
+		Statement st = con.createStatement();
+		Statement st1 = con.createStatement();
+		Statement st2 = con.createStatement();
+		Statement st3 = con.createStatement();
+		ResultSet rs = st.executeQuery(query);
+
+
+		
+		
+		
+		int option = 11;
+
+		 
+
+		// switch statement with int data type 
+		switch (option) { 
+		case 1: 
+			//collect account number 
+			System.out.print("Enter account number.");
+			int accNum = k.nextInt();
+			System.out.println("Account num: " +accNum);
+
+			//String logQuery = String.format("SELECT * FROM Translog WHERE account =%s;", accNum );
+			
+			//example query String
+			String l = "SELECT * FROM Translog WHERE account = 131296552;";
+			System.out.println(l);
+			
+			//get Result Set of Query
+			ResultSet trans = st.executeQuery(l);
+			
+			//Collect Data from each column and print it out
+			while(trans.next()) {
+				String old = trans.getString("oldBalance");
+				String newB = trans.getString("newBalance");
+				String am = trans.getString("amount");
+				String type = trans.getString("type");
+				String dt = trans.getString("transdate");
+				String time = trans.getString("timestamp");
+				String des = trans.getString("Description");
+				
+				//format it
+				String customerInsert = String.format("Old Balance: %s  New Balance: %s  amount: %s  type: %s  Transaction Date: %s  TimeStamp: %s  Description: %s", 
+						old, newB, am, type, dt, time, des);
+				
+				//print
+				System.out.println(customerInsert);
+			}
+			
+			
+		    break; 
+		case 2: 
+			
+			//initialize check and card
+			boolean check = true;
+			String card = "";
+			
+			//while loop to see if it is a valid input
+			while(check) {
+			System.out.println("Is this going to be a debit or credit card? Type 1 for debit. 2 for credit.");
+			int digit = k.nextInt();
+			
+			if(digit==1) {
+			card = "debit card";
+			check = false;
+			}
+			else if(digit ==2) {
+			card = "credit card";
+			check = false;
+			}
+			
+			else {
+				System.out.println("Not a valid option... ");
+				break;
+			}
+			}
+			
+			//debugging, prints out input
+			System.out.println(card);
+			
+			
+			//get account number as input
+			System.out.println("Enter in account number associated with this card.");
+			double aNum = k.nextDouble();
+			
+			//initialize cardNumber
+			double cNum =0;
+			
+			//query to get maximum card Number
+			String maxNum = "SELECT MAX(cardnum), MAX(account) FROM Card; ";
+			
+			//execute query and obtain result set of query
+			ResultSet rs1 = st1.executeQuery(maxNum);
+			
+			//store max cardNumber into cNum
+			while(rs1.next()) {
+				 cNum  = rs1.getLong("MAX(cardnum)");
+			 }
+			
+			//Add 1 to max cardNumber
+			cNum +=1;
+			
+			//prints out account number and new card Number
+			System.out.printf("aNum: %.0f\n", aNum);
+			System.out.printf("cNum: %.0f\n", cNum);
+			
+			//asks for pin input
+			System.out.println("Enter in desired pin.");
+			int pin = k.nextInt();
+			
+			//default date
+			String date = "2021-01-01";
+			
+			//create update instruction
+			String customerInsert = String.format("INSERT INTO Card VALUES (%s, %s, '%s', '%s', %s); ", cNum, aNum, date, card, pin);
+			
+			//execute Update
+			st.executeUpdate(customerInsert);
+			
+
+			
+		    break; 
+		case 3: //checkBalance
+			
+			//defaut account number
+			String accNum1 = "7649891921";
+			
+			//initialize balance 
+			double bal = 0;
+			
+			//create balance Query instruction
+			String balanceQuery = String.format("SELECT balance FROM Accounts WHERE account=%s;" , accNum1);
+			
+			//get result set from balance Query
+			ResultSet balance = st.executeQuery(balanceQuery);
+			
+			//get balance of account
+			while(balance.next()) {
+				 bal  = balance.getLong("balance");
+				 
+			 }
+			
+			//print out balance
+			System.out.println("Balance is: " +bal);
+			
+			
+		    break; 
+		case 4: //payment
+			
+			//default account Number
+			String accNum2 = "9598105066";
+			
+			//get payment amount input
+			System.out.println("Enter in payment amount. ");
+			float pay = k.nextFloat();
+			
+			//get type of payment
+			String type ="";
+
+				System.out.println("Is this payment through credit or debit? Press 1 for debit. 2 for credit.");
+				int choice = k.nextInt();
+				
+				if(choice==1) {
+				type = "debit";
+				}
+				else if(choice ==2) {
+				type = "credit";
+				}
+
+				
+			
+			float bal1 =0;
+			
+			//create balance Query and get the balance of that account number
+			String balanceQuery1 = String.format("SELECT balance FROM Accounts WHERE account=%s;" , accNum2);
+			
+			ResultSet balance1 = st.executeQuery(balanceQuery1);
+			
+			
+			while(balance1.next()) {
+				 bal1  = balance1.getFloat("balance");
+			 }
+			
+			//calculate new balance
+			float newBal = bal1+ pay;
+			System.out.println("Balance: " + bal1);
+			System.out.println("New Balance: " +newBal);
+			
+			//update balance
+			String payQuery =String.format("UPDATE Accounts SET balance = balance+%s WHERE account = %s;", pay, accNum2);
+			String payTranslog = String.format("INSERT INTO Translog VALUES (%s, %s , %s , %s,'%s', CURDATE(), CURTIME(),'payment');", accNum2, bal1, newBal, pay, type);
+			
+			//debugging: printing out instructions
+			System.out.println(payQuery);
+			System.out.println(payTranslog);
+			
+			//Executing both of those instructions
+			st.executeUpdate(payQuery);
+			st.executeUpdate(payTranslog);
+			
+			
+			
+			
+			
+		    break; 
+		case 5: //Deposit
+			
+			//test account
+			String accNum3 = "9918913065";
+			
+			//get deposit amount
+			System.out.println("How much is being deposited? ");
+			float dep = k.nextFloat();
+			
+			
+			//get type of deposit
+			String depType ="";
+
+				System.out.println("Is this deposit through credit or debit? Press 1 for debit. 2 for credit.");
+				int choice1 = k.nextInt();
+				
+				if(choice1==1) {
+				depType = "debit";
+				}
+				else if(choice1 ==2) {
+				depType = "credit";
+				}
+				
+				
+			float bal2 = 0;
+			
+			//create balance Query and get the balance of that account number
+			String balanceQuery2 = String.format("SELECT balance FROM Accounts WHERE account=%s;" , accNum3);
+			
+			ResultSet balance2 = st.executeQuery(balanceQuery2);
+			
+			while(balance2.next()) {
+				 bal2  = balance2.getFloat("balance");
+			 }
+			
+			//calculate new Balance
+			float newBal1 = bal2+ dep;
+			System.out.println("Balance before: " + bal2);
+			System.out.println("New Balance: " +newBal1);
+			
+			//update balance
+			String depUpdate =String.format("UPDATE Accounts SET balance = balance+%s WHERE account = %s;", dep, accNum3);
+			
+			String depTranslog = String.format("INSERT INTO Translog VALUES (%s, %s , %s , %s,'%s', CURDATE(), CURTIME(),'deposit');", accNum3, bal2, newBal1, dep, depType);
+			
+			//debugging: printing out instructions
+			System.out.println(depUpdate);
+			System.out.println(depTranslog);
+			
+			st.executeUpdate(depUpdate);
+			st.executeUpdate(depTranslog);
+		    break; 
+		case 6: //withdrawal
+			
+			//test account
+			String accNum4 = "6995286664";
+			
+			//get the balance Query
+			String balanceQuery3 = String.format("SELECT balance FROM Accounts WHERE account=%s;" , accNum4);
+			
+			//get Result Set containing the balance of account
+			ResultSet balance3 = st.executeQuery(balanceQuery3);
+			
+			float bal3 =0;
+			
+			//set bal3 as balance
+			while(balance3.next()) {
+				 bal3  = balance3.getFloat("balance");
+			 }
+			
+			System.out.println("Balance: " +bal3);
+			
+			//if it is less than 0, end program
+			if(bal3<=0) {
+				System.out.println("Insufficient funds. Can not withdrawal.");
+				break;
+			}
+			
+			//display balance (debugging)
+			System.out.println("Your balance is " +bal3);
+			
+			//get withdrawal amount
+			System.out.println("How much do you want to withdrawal?");
+			float withdrawal = k.nextFloat();
+			
+			//calculate new balance
+			float newBal2 = bal3 - withdrawal;
+			
+			//if withdrawal exceeds balance, then exits
+			if(newBal2<0) {
+				System.out.println("Withdrawal request exceeds balance. Exiting.");
+				break;
+			}
+			
+			//get type of payment
+			String withType ="";
+
+				System.out.println("Is this withdrawal through credit or debit? Press 1 for debit. 2 for credit.");
+				int choice2 = k.nextInt();
+				
+				if(choice2==1) {
+				withType = "debit";
+				}
+				else if(choice2 ==2) {
+				withType = "credit";
+				}
+			
+			//update instructions
+			String withUpdate =String.format("UPDATE Accounts SET balance = balance-%s WHERE account = %s;", withdrawal, accNum4);
+			
+			String withTranslog = String.format("INSERT INTO Translog VALUES (%s, %s , %s , %s,'%s', CURDATE(), CURTIME(),'withdrawal');", accNum4, bal3, newBal2, withdrawal, withType);
+			
+			//print out instructions (debugging)
+			System.out.println(withUpdate);
+			System.out.println(withTranslog);
+			
+			//execute instructions
+			st.executeUpdate(withUpdate);
+			st.executeUpdate(withTranslog);
+			
+		    break; 
+		    
+		case 7: //Transfer
+			
+			//account to transfer from
+			String accNum5 = "6995286664";
+			System.out.println("Account to withdrawal: " +accNum5);
+			
+			//account to transfer to
+			String accNum6 = "9918913065";
+			System.out.println("Account to receive transfer: " +accNum6);
+			
+			//get balance from account to transfer from
+            String fromBalanceQ = String.format("SELECT balance FROM Accounts WHERE account=%s;" , accNum5);
+			ResultSet fromBalance = st.executeQuery(fromBalanceQ);
+			
+			float fromBal =0;
+			
+			while(fromBalance.next()) {
+				 fromBal = fromBalance.getFloat("balance");
+			 }
+			
+			//print out balance of from account
+			System.out.println("Balance: " +fromBal);
+			
+			// checks to see if the balance is greater than 0, if not then it exits
+			if(fromBal<=0) {
+				System.out.println("Insufficient funds in account. Can not withdrawal.");
+				break;
+				
+			}
+			
+			
+			//get how much to transfer
+			System.out.println("How much do you want to transfer?");
+			float transAmount = k.nextFloat();
+			
+			//calculate new Balance for from account
+			float newBalFrom = fromBal- transAmount;
+			
+			
+			//if transfer amount exceeds from balance, exits
+			if(newBalFrom<=0) {
+				System.out.println("Withdrawal request exceeds balance. Exiting.");
+				break;
+			}
+			
+			
+			//get balance from to account
+			String toBalanceQ = String.format("SELECT balance FROM Accounts WHERE account=%s;" , accNum6);
+			ResultSet toBalance = st.executeQuery(toBalanceQ);
+			
+			float toBal =0;
+			
+			while(toBalance.next()) {
+				 toBal = toBalance.getFloat("balance");
+			 }
+			
+			//print out to account balance
+			System.out.println("Balance: " +toBal);
+			
+			//calculate to account balance with transfer
+			float newBalTo = toBal + transAmount;
+			
+			//create instructions
+			String fromUpdate =String.format("UPDATE Accounts SET balance = balance-%s WHERE account = %s;", transAmount, accNum5);
+			String toUpdate =String.format("UPDATE Accounts SET balance = balance+%s WHERE account = %s;", transAmount, accNum6);
+			
+			String fromTranslog = String.format("INSERT INTO Translog VALUES (%s, %s , %s , %s,'debit', CURDATE(), CURTIME(),'transfer');", accNum5, fromBal, newBalFrom, transAmount);
+			String toTranslog = String.format("INSERT INTO Translog VALUES (%s, %s , %s , %s,'debit', CURDATE(), CURTIME(),'received transfer');", accNum6, toBal, newBalTo, transAmount);
+			
+			//print instructions
+			System.out.println(fromUpdate);
+			System.out.println(toUpdate);
+			System.out.println(fromTranslog);
+			System.out.println(toTranslog);
+			
+			//execute instructions
+			st.executeUpdate(fromUpdate);
+			st.executeUpdate(toUpdate);
+			
+			st.executeUpdate(fromTranslog);
+			st.executeUpdate(toTranslog);
+			
+			
+			break;
+			
+		case 8: //get entire bank balance
+			
+			
+			System.out.println("Viewing total bank Assets. ");
+			
+			//get sum from accounts
+			String assetQuery = "SELECT SUM(balance) FROM Accounts;";
+			
+			ResultSet assets = st.executeQuery(assetQuery);
+			
+			float total =0;
+			
+			while(assets.next()) {
+				 total  = assets.getFloat("SUM(balance)");
+				 
+			 }
+			
+			System.out.println("The total amount of assets is " +total);
+			
+			
+			
+			
+			
+			break;
+			
+		case 9: //get entire Translog script
+			
+			String transQ = "SELECT * FROM Translog;";
+			System.out.println(transQ);
+			
+			//get Result Set of Query
+			ResultSet allTrans = st.executeQuery(transQ);
+			
+			//Collect Data from each column and print it out
+			while(allTrans.next()) {
+				String old1 = allTrans.getString("oldBalance");
+				String newB1 = allTrans.getString("newBalance");
+				String am1 = allTrans.getString("amount");
+				String type1 = allTrans.getString("type");
+				String dt1 = allTrans.getString("transdate");
+				String time1 = allTrans.getString("timestamp");
+				String des1 = allTrans.getString("Description");
+				
+				//format it
+				String allTransQ = String.format("Old Balance: %s  New Balance: %s  amount: %s  type: %s  Transaction Date: %s  TimeStamp: %s  Description: %s", 
+						old1, newB1, am1, type1, dt1, time1, des1);
+				
+				//print
+				System.out.println(allTransQ);
+			}
+			
+			
+		
+			
+			
+			break;
+			
+			
+
+		case 10: //delete Account
+			
+			//account number to delete
+			String accNumDel = "70079236";
+			
+			//disable foreign key check
+			String foreignQCheck = "SET FOREIGN_KEY_CHECKS =0;";
+			
+			//Delete instructions for Accounts, Translog, Card, and CustomerInfo
+			String delAccount = String.format("DELETE FROM Accounts WHERE account = %s;", accNumDel);
+			String delTranslog = String.format("DELETE FROM Translog WHERE account = %s;", accNumDel);
+			String delCard = String.format("DELETE FROM Card WHERE account = %s;", accNumDel);
+			String delCustInfo = String.format("DELETE FROM CustomerInfo WHERE account = %s;", accNumDel);
+			
+			//excecute each instruction
+			st.executeUpdate(foreignQCheck);
+			st.executeUpdate(delAccount);
+			st.executeUpdate(delTranslog);
+			st.executeUpdate(delCard);
+			st.executeUpdate(delCustInfo);
+			
+			System.out.println("Deleted accout number: " +accNumDel);
+			break;
+			
+			
+			
+		case 11: //update account Number
+			
+			//account number to change
+			String currentAccNumber = "0123456789";
+			
+			//new account number
+			String newAccNumber = "1234567890";
+			
+			//set no foreign chekcs
+			String foreignQCheck1 = "SET FOREIGN_KEY_CHECKS =0;";
+			
+			//update instructions for Accounts, Translog, CustomerInfo and Card
+			String updateAcc = String.format("UPDATE Accounts SET account = %s WHERE account= %s;",newAccNumber, currentAccNumber);
+			String updateTrans = String.format("UPDATE Translog SET account = %s WHERE account= %s;" ,newAccNumber, currentAccNumber);
+			String updateCust = String.format("UPDATE CustomerInfo SET account = %s WHERE account= %s;" ,newAccNumber, currentAccNumber);
+			String updateCard = String.format("UPDATE Card SET account =%s WHERE account = %s;",newAccNumber, currentAccNumber);
+			
+			//excute each instruction
+			st.executeUpdate(foreignQCheck1);
+			st.executeUpdate(updateAcc);
+			st.executeUpdate(updateTrans);
+			st.executeUpdate(updateCust);
+			st.executeUpdate(updateCard);
+			
+			System.out.println("Account number " +currentAccNumber+ " changed to "+newAccNumber);
+			break;
+		default: 
+		    System.out.println("Invalid input");
+		    break; 
+		} 
+		System.out.println("Done"); 
+		 
+
+		
+		}
+
+	
+
+
+		catch(Exception e){ System.out.println(e);}  
+		}  
+}  
